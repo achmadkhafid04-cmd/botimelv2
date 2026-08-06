@@ -53,6 +53,7 @@ const client = new Client({
             '--disable-translate',
             '--hide-scrollbars',
             '--mute-audio',
+            '--disable-features=IsolateOrigins,site-per-process,Translate,OptimizationHints',
             '--js-flags=--max-old-space-size=256'
         ]
     }
