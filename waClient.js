@@ -1,6 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
 
 let qrCodeData = null;
 let clientStatus = 'initializing';
@@ -9,16 +10,24 @@ let isAuthenticated = false;
 
 const SESSION_PATH = '/tmp/.wwebjs_auth';
 
+// Fungsi brutal untuk membunuh semua sisa proses chrome/chromium di background
+function forceKillChrome() {
+    return new Promise((resolve) => {
+        exec('pkill -f chrome', (err) => {
+            exec('pkill -f chromium', (err2) => {
+                resolve();
+            });
+        });
+    });
+}
+
 function cleanLockFiles() {
     try {
         const lockFile = path.join(SESSION_PATH, 'session', 'SingletonLock');
-        if (fs.existsSync(lockFile)) {
-            fs.unlinkSync(lockFile);
-        }
+        if (fs.existsSync(lockFile)) fs.unlinkSync(lockFile);
+        
         const cookieLock = path.join(SESSION_PATH, 'session', 'SingletonCookie');
-        if (fs.existsSync(cookieLock)) {
-            fs.unlinkSync(cookieLock);
-        }
+        if (fs.existsSync(cookieLock)) fs.unlinkSync(cookieLock);
     } catch (e) {}
 }
 
@@ -98,8 +107,10 @@ function scheduleReconnect() {
     setTimeout(async () => {
         try {
             try { await client.destroy(); } catch (err) {}
+            await forceKillChrome(); // Paksa matikan browser yg nyangkut
             cleanLockFiles();
             await new Promise(resolve => setTimeout(resolve, 2000));
+            
             clientStatus = 'initializing';
             await client.initialize();
         } catch (err) {
@@ -111,6 +122,7 @@ function scheduleReconnect() {
 }
 
 async function initializeClient() {
+    await forceKillChrome();
     cleanLockFiles();
     try {
         await client.initialize();
@@ -127,9 +139,17 @@ async function restartClient() {
     try {
         await client.destroy();
     } catch (err) {}
+    
+    await forceKillChrome(); // Paksa matikan browser yg nyangkut
     cleanLockFiles();
     await new Promise(resolve => setTimeout(resolve, 2000));
-    await client.initialize();
+    
+    try {
+        await client.initialize();
+    } catch (err) {
+        console.error('[WA] Error manual restart:', err.message);
+        scheduleReconnect();
+    }
 }
 
 function getQR() {
