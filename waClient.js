@@ -18,6 +18,16 @@ function cleanLockFiles() {
 
 async function initializeClient() {
     isReconnecting = false;
+    
+    // Pastikan socket lama benar-benar mati sebelum membuat baru
+    if (sock) {
+        try {
+            sock.ev.removeAllListeners();
+            sock.ws.close();
+        } catch (e) {}
+        sock = null;
+    }
+
     const { state, saveCreds } = await useMultiFileAuthState(SESSION_PATH);
     
     sock = makeWASocket({
@@ -93,9 +103,14 @@ function scheduleReconnect() {
 async function restartClient() {
     clientStatus = 'initializing';
     qrCodeData = null;
-    try {
-        if (sock) sock.logout();
-    } catch (e) {}
+    
+    if (sock) {
+        try {
+            sock.ev.removeAllListeners();
+            sock.ws.close();
+        } catch (e) {}
+        sock = null;
+    }
     
     // Hapus sesi auth agar dapat QR baru bersih
     if (fs.existsSync(SESSION_PATH)) {
