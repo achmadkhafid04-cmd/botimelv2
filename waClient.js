@@ -23,8 +23,11 @@ async function initializeClient() {
     sock = makeWASocket({
         auth: state,
         printQRInTerminal: false,
-        logger: pino({ level: 'silent' }), // Matikan log bawaan Baileys yang terlalu ramai
-        browser: ['OMAETEE Bot', 'Chrome', '1.0.0']
+        logger: pino({ level: 'silent' }), // Matikan log bawaan Baileys
+        browser: ['OMAETEE Bot', 'Chrome', '1.0.0'],
+        syncFullHistory: false, // MATIKAN sinkronisasi riwayat chat penuh
+        generateHighQualityLinkPreview: false,
+        markOnlineOnConnect: false
     });
 
     sock.ev.on('creds.update', saveCreds);
