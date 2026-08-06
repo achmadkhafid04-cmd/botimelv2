@@ -60,8 +60,9 @@ async function initializeClient() {
 
         if (connection === 'close') {
             qrCodeData = null;
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.warn('[WA] Client terputus. Alasan:', lastDisconnect.error?.message);
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            console.warn(`[WA] Client terputus. Alasan: ${lastDisconnect?.error?.message} (Code: ${statusCode})`);
             clientStatus = 'disconnected';
             
             if (shouldReconnect) {
