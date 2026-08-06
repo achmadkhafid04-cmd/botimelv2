@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: wa-bot-omaetee
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SPREADSHEET_ID
+        value: 1nZEYQkfy7n27piFyTpCg6G-FPqZwPRw6heIaoExwwXo
+      - key: PORT
+        value: 8080
+    healthCheckPath: /health
